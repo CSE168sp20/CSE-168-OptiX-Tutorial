@@ -37,15 +37,15 @@ The starter code have two versions: `Windows` and `Linux`. Choose one of them ba
 Make sure to install all the requirements above before reading this section. 
 ### Windows
 Install Visual Studio 2017 if you haven't already (other versions might work as well but that is not guaranteed). In the starter code, you should see: `PathTracer` and `PathTracer.sln`. `PathTracer` is a directory that contains the source codes and the test scenes. `PathTracer.sln` is a solution file. Double click to open it in Visual Studio. Click `Debug` (the one next to `x64`) to change the configuration to `Release`. 
-![window_1](/Tutorials/windows_1.png?raw=true)
-![window_2](/Tutorials/windows_2.png?raw=true)
+![window_1](windows_1.png?raw=true)
+![window_2](windows_2.png?raw=true)
 
 Right-click `PathTracer` in the solution explorer and go to properties. 
-![window_3](/Tutorials/windows_3.png?raw=true)
+![window_3](windows_3.png?raw=true)
 
 Under `Configuration Properties`, select `Debugging` and edit `Command Arguments` to whatever scene file you want to run, for instance, `Scenes/scene1.test`. 
 
-![window_4](/Tutorials/windows_4.png?raw=true)
+![window_4](windows_4.png?raw=true)
 
 Remember to change this when you need to render other scenes. Now press `ctrl + F5` or click `Local Windows Debugger` to build and run the program. 
 
@@ -81,7 +81,7 @@ For reference, the [programming guide](https://raytracing-docs.nvidia.com/optix_
 ## OptiX Programs
 OptiX programs are the building blocks in an OptiX application. There are several types of programs that each perform a specific job in the render pipeline. See the flowchart below for an overview of the basic OptiX programs.
 
-![flowchart](/Tutorials/flowchart.png?raw=true)
+![flowchart](flowchart.png?raw=true)
 
 Once a scene is loaded, rendering can be started by "launching" OptiX. This triggers the [Ray Generation Program](#ray-generation-program) to generate primary camera rays using some user-defined camera model. OptiX will automatically traverse the scene, calling the [Intersection Program](#intersection-program) of any geometry which the rays might hit. When the nearest intersection is found, the ray's [Closest-hit Program](#material-programs-closest-hit-program) is called, which usually runs shading calculations for the intersection and can optionally fire secondary rays. If no intersection is detected, the ray's [Miss Program](#miss-program) is called, which can be used to define what the background of a scene looks like. The ray can also have an [Any-hit Program](#material-programs-any-hit-program), which is called on *any* detected intersection regardless of whether it is the closest intersection. The Any-hit Program is useful for techniques such as shadow rays which only care *if* an intersection occurs, but not necessarily *where* the closest intersection is. Additionally, if a [Bounding Program](#bounding-program) is defined for some geometry, OptiX can automatically construct a [bounding volume hierarchy](https://en.wikipedia.org/wiki/Bounding_volume_hierarchy) to accelerate geometry intersections.
 
