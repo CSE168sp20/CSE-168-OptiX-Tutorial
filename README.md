@@ -1,23 +1,5 @@
 This tutorial will cover the basics of using OptiX for the first assignment. Complete all the tasks as you are reading and you will get a GPU ray tracer, which you will expand to a path tracer in the future assignments.
 
-## Table of Contents
-- [Assignment 1](#Assignment-1)
-  - [Table of Contents](#Table-of-Contents)
-  - [Requirements](#Requirements)
-  - [Build Instructions](#Build-Instructions)
-    - [Windows](#Windows)
-    - [Linux](#Linux)
-  - [About OptiX](#About-OptiX)
-  - [OptiX Programs](#OptiX-Programs)
-    - [Basics](#Basics)
-    - [Ray Generation Program](#Ray-Generation-Program)
-    - [Intersection Program](#Intersection-Program)
-    - [Material Programs: Closest-hit Program](#Material-Programs-Closest-hit-Program)
-    - [Material Programs: Any-hit Program](#Material-Programs-Any-hit-Program)
-    - [Bounding Program](#Bounding-Program)
-  - [Advanced Features](#Advanced-Features)
-
-
 ## Requirements
 *  An NVIDIA graphics card with R435.80 driver or newer. It doesn't have to be
    an RTX card. If you don't know the version of the driver, just upgrade it 
