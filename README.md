@@ -1,4 +1,3 @@
-# Assignment 1
 This tutorial will cover the basics of using OptiX for the first assignment. Complete all the tasks as you are reading and you will get a GPU ray tracer, which you will expand to a path tracer in the future assignments.
 
 ## Table of Contents
@@ -20,58 +19,24 @@ This tutorial will cover the basics of using OptiX for the first assignment. Com
 
 
 ## Requirements
-* NVIDIA GPU with driver version 418+
-* [CUDA Toolkit 10.0+](https://developer.nvidia.com/cuda-toolkit)
-* [OptiX 6.0.0+](https://developer.nvidia.com/optix) (You will need to create a free NVIDIA developer account.)
-* Starter code
-  * [Windows](https://github.com/GuangyanCai/CSE-168-OptiX-Starter-Code-Windows)
-  * [Linux](https://github.com/GuangyanCai/CSE-168-OptiX-Starter-Code-Linux)
+*  An NVIDIA graphics card with R435.80 driver or newer. It doesn't have to be
+   an RTX card. If you don't know the version of the driver, just upgrade it 
+   to the newest version. 
+
+*  [CUDA Toolkit 5.0+](https://developer.nvidia.com/cuda-downloads). Install the 
+   latest version if you don't have CUDA yet.
+
+*  [CMake 3.0 minimum](http://www.cmake.org/cmake/resources/software.html).
+
+*  [OptiX 6.5.0](https://developer.nvidia.com/designworks/optix/download). You will need to create a free NVIDIA developer account.
+
+*  [Starter code](https://github.com/CSE168sp20/CSE-168-OptiX-Starter-Code)
 
 To verify that you have the correct versions for the GPU driver and CUDA, you can run `nvidia-smi` to see the versions. On Windows, use PowerShell or Command Prompt to change directory to `C:\Program Files\NVIDIA Corporation\NVSMI` and run `nvidia-smi`. On Linux, simply run `nvidia-smi`.
 
-On Windows, you will find the OptiX SDK installed at `C:\ProgramData\NVIDIA Corporation\OptiX SDK 6.0.0`. On Linux, you will get the SDK directory, `NVIDIA-OptiX-SDK-6.0.0-linux64/`, which you can install in `/usr/local/`, `/opt/`, or even just leave in your home directory. However, it's recommended that you install it in `/usr/local` so that you don't need modify the makefile. OptiX is shipped with some pre-compiled examples in the SDK directory. Try running `optixWhitted` or `optixPathTracer` to make sure you've installed everything correctly.
+On Windows, you will find the OptiX SDK installed at `C:\ProgramData\NVIDIA Corporation\OptiX SDK 6.5.0`. On Linux, you will get the SDK directory, `NVIDIA-OptiX-SDK-6.5.0-linux64/`, which you can install in `/usr/local/`, `/opt/`, or even just leave in your home directory. OptiX is shipped with some pre-compiled examples in the SDK directory. Try running `optixWhitted` or `optixPathTracer` to make sure you've installed everything correctly.
 
-The starter code have two versions: `Windows` and `Linux`. Choose one of them based on your platform. Make sure you can compile the starter code (read the build instructions on how to do so). If it compiles and runs successfully, you should see a window pop out showing an image that is all red and the same image is generated in the directory.
-
-## Build Instructions
-Make sure to install all the requirements above before reading this section. 
-### Windows
-Install Visual Studio 2017 if you haven't already (other versions might work as well but that is not guaranteed). In the starter code, you should see: `PathTracer` and `PathTracer.sln`. `PathTracer` is a directory that contains the source codes and the test scenes. `PathTracer.sln` is a solution file. Double click to open it in Visual Studio. Click `Debug` (the one next to `x64`) to change the configuration to `Release`. 
-![window_1](windows_1.png?raw=true)
-![window_2](windows_2.png?raw=true)
-
-Right-click `PathTracer` in the solution explorer and go to properties. 
-![window_3](windows_3.png?raw=true)
-
-Under `Configuration Properties`, select `Debugging` and edit `Command Arguments` to whatever scene file you want to run, for instance, `Scenes/scene1.test`. 
-
-![window_4](windows_4.png?raw=true)
-
-Remember to change this when you need to render other scenes. Now press `ctrl + F5` or click `Local Windows Debugger` to build and run the program. 
-
-### Linux
-In the starter codes, you should see: `PathTracer`. `PathTracer` is a directory that contains the source codes and the test scenes. It also contains a makefile to help you build the program. To run it you will need `make` and `g++`. Install them if you haven't already. On Ubuntu or other Debian-based distributions, you can install them with: 
-
-```
-sudo apt-get install build-essential
-```
-You will also need `GLEW` and `GLFW` for displaying the image with OpenGL. You can install them with:
-```
-sudo apt-get install libglew-dev libglfw3-dev
-```
-Now you are ready. Head to the starter code and enter the directory `PathTracer`. There should be a makefile. To build or rebuild your codes, run 
-```
-make
-``` 
-If you want a clean rebuild, run
-```
-make clean && make
-```
-If build successfully, an executable called `PathTracer` will be generated. It requires an argument specifying what scene file to render. For example, to render the first test, you can run
-```
-./PathTracer Scenes/scene1.test
-```
-
+The starter code support Windows and Linux. You can find the platform-specific build instructions, `INSTALL_WIN.txt` and `INSTALL_LINUX.txt` at the top directory. Read the one you need and make sure you can compile the starter code. If it compiles and runs successfully, you should see a window pop out showing an image that is all red and the same image is generated in the directory. To run the program, you will need to supply an arbitrary scene file, for example, `Scenes/hw1/scene4-diffuse.test`.
 
 ## About OptiX
 The OptiX API was developed by Nvidia to accelerate ray tracing applications using GPUs. It utilizes another API created by Nvidia called CUDA, which allows developers to conduct general purpose processing on GPUs. A CUDA program consists of `host` and `device` code: `host` code runs on the CPU and `device` code runs on the GPU. For this project, all `host` code belongs in `.cpp` files and all `device` code belongs in `.cu` files. OptiX provides an abstracted pipeline for ray tracing algorithms, which allows developers to define their own "programs" in `device` code to fit into the pipeline. They are analogous to shaders in OpenGL.
