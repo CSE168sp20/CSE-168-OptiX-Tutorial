@@ -1,4 +1,20 @@
-This tutorial will cover the basics of using OptiX for the first assignment. Complete all the tasks as you are reading and you will get a GPU ray tracer, which you will expand to a path tracer in the future assignments.
+# Tutorial
+This tutorial will cover the basics of using OptiX for the first assignment. Complete all the tasks as you are reading and you will get a GPU ray tracer, which you will expand to a path tracer in the future assignments. However, this is **NOT** a tutorial about ray tracing. You should refer to course materials for that part. The starter code is thoroughly documented and you can find answers to a lot of questions by reading it. There are a lot of `TODO` comments in the starter code. Make sure you don't miss any of them.
+
+## Table of contents
+- [Tutorial](#tutorial)
+  - [Table of contents](#table-of-contents)
+  - [Requirements](#requirements)
+  - [About OptiX](#about-optix)
+  - [OptiX Programs](#optix-programs)
+    - [Basics](#basics)
+    - [Ray Generation Program](#ray-generation-program)
+    - [Miss Program](#miss-program)
+    - [Intersection Program](#intersection-program)
+    - [Material Programs: Closest-hit Program](#material-programs-closest-hit-program)
+    - [Material Programs: Any-hit Program](#material-programs-any-hit-program)
+    - [Bounding Program](#bounding-program)
+  - [Advanced Features](#advanced-features)
 
 ## Requirements
 *  An NVIDIA graphics card with R435.80 driver or newer. It doesn't have to be
@@ -23,7 +39,7 @@ The starter code support Windows and Linux. You can find the platform-specific b
 ## About OptiX
 The OptiX API was developed by Nvidia to accelerate ray tracing applications using GPUs. It utilizes another API created by Nvidia called CUDA, which allows developers to conduct general purpose processing on GPUs. A CUDA program consists of `host` and `device` code: `host` code runs on the CPU and `device` code runs on the GPU. For this project, all `host` code belongs in `.cpp` files and all `device` code belongs in `.cu` files. OptiX provides an abstracted pipeline for ray tracing algorithms, which allows developers to define their own "programs" in `device` code to fit into the pipeline. They are analogous to shaders in OpenGL.
 
-For reference, the [programming guide](https://raytracing-docs.nvidia.com/optix_6_0/guide_6_0/index.html#guide#) and the [API documentation](https://raytracing-docs.nvidia.com/optix_6_0/api_6_0/html/index.html) will be very helpful. Do be aware that the programming guide uses the OptiX C API most of the time but for the assignment, while we will use OptiXpp, a thin C++ wrapper for the C API.
+For reference, the [programming guide](https://raytracing-docs.nvidia.com/optix6/guide_6_5/index.html#guide#) and the [API documentation](https://raytracing-docs.nvidia.com/optix6/api_6_5/html/index.html) will be very helpful. Do be aware that the programming guide uses the OptiX C API most of the time but for the assignment, while we will use OptiXpp, a thin C++ wrapper for the C API.
 
 ## OptiX Programs
 OptiX programs are the building blocks in an OptiX application. There are several types of programs that each perform a specific job in the render pipeline. See the flowchart below for an overview of the basic OptiX programs.
@@ -50,12 +66,12 @@ To make these programs do meaningful work, we need to supply them with data thro
 ```cpp
 // Host
 
-Program program = context->createProgramFromPTXFile(
-  "PTX/foo.ptx",
+Program program = createProgram(
+  "foo.cu",
   "bar");
 ```
 
-The first argument of `createProgramFromPTXFile()` is the file name/location. CUDA files are compiled to PTX files hence the extension is `ptx` instead of `cu`. The starter code do it for you and store the PTX files in the `PTX/` directory. The second argument is simply the function name. `context` is an OptiX context, which you can ignore for now.
+`createProgram` is a helper function in `Renderer.h`. The first argument of is the filename of a CUDA file. The second argument is simply the function name.
 
 There are two ways to transfer data between `host` and `device`: through a `buffer` or a `variable`. A `buffer` is a multidimensional array, which you can think of as a vertex buffer object in OpenGL. To use it, declare the buffer in the `device` codes:
 ```cpp
@@ -107,9 +123,9 @@ program["myVar"]->setFloat(f1, f2, f3); // f1, f2, f3 are float
 // Or
 program["myVar"]->setFloat(f); // f is float3
 ```
-You can read more [here](https://raytracing-docs.nvidia.com/optix_6_0/api_6_0/html/classoptix_1_1_variable_obj.html).
+You can read more [here](https://raytracing-docs.nvidia.com/optix6/api_6_5/html/classoptix_1_1_variable_obj.html).
 
-You might wonder what is `float3`. It's a type defined by OptiX to represent a 3D vector of `float`. Similarly, there are `float2`, `float1`, `int3`, etc. You can access its components by, for instance, `var.x`, `var.y` and `var.z`. It's highly recommended to read [this](https://raytracing-docs.nvidia.com/optix_6_0/api_6_0/html/optixu__math__namespace_8h.html) to learn more about the vector types and their operations. Read [this](https://raytracing-docs.nvidia.com/optix_6_0/api_6_0/html/optixu__matrix__namespace_8h.html) if you need to use the matrix types.
+You might wonder what is `float3`. It's a type defined by OptiX to represent a 3D vector of `float`. Similarly, there are `float2`, `float1`, `int3`, etc. You can access its components by, for instance, `var.x`, `var.y` and `var.z`. It's highly recommended to read [this](https://raytracing-docs.nvidia.com/optix6/api_6_5/html/optixu__math__namespace_8h.html) to learn more about the vector types and their operations. Read [this](https://raytracing-docs.nvidia.com/optix6/api_6_5/html/optixu__matrix__namespace_8h.html) if you need to use the matrix types.
 
 ### Ray Generation Program
 The entry point of all programs is a `ray generation program`. It is responsible for generating rays, shooting them and recording the results. In the starter code, you can find it in `PinholeCamera.cu`:
@@ -125,12 +141,12 @@ RT_PROGRAM void generateRays() {
 
 It has no arguments. Again, the function name doesn't matter. We need to inform OptiX where and which function is the `ray generation program`:
 ```cpp
-// OptixApp.cpp
+// Renderer.cpp
 // Host
 
 // programs is a hash table that maps std::string to Program
-programs["rayGen"] = context->createProgramFromPTXFile(
-  "PTX/PinholeCamera.ptx",
+programs["rayGen"] = createProgram(
+  "PinholeCamera.cu", 
   "generateRays");
 
 context->setRayGenerationProgram(0, programs["rayGen"]);
@@ -142,7 +158,7 @@ To shoot a ray, we need to create one first:
 // PinholeCamera.cu
 // Device
 
-Ray ray = make_Ray(eye, dir, BASIC_RAY, RAY_EPSILON, RT_DEFAULT_MAX);
+Ray ray = make_Ray(origin, dir, 0, epsilon, RT_DEFAULT_MAX);
 ```
 `Ray` is a type defined by OptiX. We can create one using
 ```cpp
@@ -150,7 +166,7 @@ Ray ray = make_Ray(eye, dir, BASIC_RAY, RAY_EPSILON, RT_DEFAULT_MAX);
 
 make_Ray(origin, direction, rayType, minT, maxT)
 ```
-`rayType` is an `int` that tells OptiX which `Material Program` to use. In `Constants.h`, we define two ray types: `BASIC_RAY` and `SHADOW_RAY`. When you need to create a baisc ray, use `BASIC_RAY` as the ray type. Similarly, use `SHADOW_RAY` as the ray type for shadow ray. We also define a constant called `RAY_EPSILON`, which equals 0.001. It's used as `minT` in this case.
+This will give us a ray, `origin` + `t` * `direction`, where `minT` <= `t` <= `maxT`. `rayType` is an `int` that tells OptiX what ray to generate. In the starter code, we define two ray types: 0 and 1. When you need to create a baisc ray, use 0 as the ray type. Similarly, use 1 as the ray type for shadow ray.
 
 To receive the result that the ray gets, we need it to carry a `payload`, which is a user-defined `struct` that contains important variables that other programs will read or write later, such as the color of the intersection. Our definition of a minimal payload struct is located in `Payload.h`:
 
@@ -158,35 +174,11 @@ To receive the result that the ray gets, we need it to carry a `payload`, which 
 // Payload.h
 // Device
 
-struct Payload {
-  float3 result; // the color of intersection
-  int depth; // recursion depth
+struct Payload
+{
+    optix::float3 radiance;
 };
 ```
-
-Here, we simply declare one and set its depth:
-```cpp
-// PinholeCamera.cu
-// Device
-
-Payload payload;
-payload.depth = depth.x;
-```
-Notice that `depth` is a variable declared above the function:
-```cpp
-// PinholeCamera.cu
-// Device
-
-rtDeclareVariable(int1, depth, , ); // recursion depth
-```
-We set the value of depth in `OptixApp::buildScene()`:
-```cpp
-// OptixApp.cpp
-// Host
-
-programs["rayGen"]["depth"]->setInt(depth);
-```
-You will need to set your own variables like this later.
 
 Let's look at other variables and buffers we have here:
 ```cpp
@@ -205,11 +197,11 @@ rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, ); // a 2d index (x, y)
 // Device
 
 // Write the result
-resultBuffer[launchIndex] = payload.result;
+resultBuffer[launchIndex] = payload.radiance;
 ```
-Notice that when we declare `launchIndex`, we fill in the third argument. This argument is for "semantic". OpitX provides some internal semantics that allows you to access some important variables it creates. For instance, `rtLaunchIndex` will give users the current launch index signifying which pixel we are working on. You can read about other internal semantics and in which programs you can access them [here](https://raytracing-docs.nvidia.com/optix_6_0/guide_6_0/index.html#programs#internally-provided-semantics).
+Notice that when we declare `launchIndex`, we fill in the third argument. This argument is for "semantic". OpitX provides some internal semantics that allows you to access some important variables it creates. For instance, `rtLaunchIndex` will give users the current launch index signifying which pixel we are working on. You can read about other internal semantics and in which programs you can access them [here](https://raytracing-docs.nvidia.com/optix6/guide_6_5/index.html#programs#internally-provided-semantics).
 
-`root` is a `rtObject` and it is the root of the OptiX graph we are going to traverse. You can think of an OptiX graph as a scene graph that contains all the geometries, although it has more going on. You can read about it [here](https://raytracing-docs.nvidia.com/optix_6_0/guide_6_0/index.html#host#graph-nodes) but the starter codes do it for you already.
+`root` is a `rtObject` and it is the root of the OptiX graph we are going to traverse. You can think of an OptiX graph as a scene graph that contains all the geometries, although it has more going on. You can read about it [here](https://raytracing-docs.nvidia.com/optix6/guide_6_5/index.html#host#graph-nodes) but the starter codes do it for you already.
 
 Now we are ready to trace the ray.
 ```cpp
@@ -221,16 +213,17 @@ rtTrace(root, ray, payload);
 Obviously, the current ray is not correct. To make the correct ray, we need more information.
 
 > **Task 1**:
-> 1. In `OptixAPP::buildScene()`, read the following values from the scene file and transfer them to the ray generation program: eye, center, up and fovy. The starter code contain some examples.
-> 2. In `generateRays()`, use the variables you have to calculate the correct origin and direction of the ray. For now, you can test it by printing values using `rtPrintf()`, which has the same usage as  `printf()`.
+> 1. In `SceneLoader::load()`, read the following values from the scene file: eye, center, up and fovy. The starter code contain some examples.
+> 2. Transfer them to the ray generation program in `Renderer::buildScene()` by declaring `variables`. 
+> 2. In `PinholeCamera.cu`, use the variables you have to calculate the correct origin and direction of the ray. For now, you can test it by printing values using `rtPrintf()`, which has the same usage as  `printf()`.
 
 <br />
 
  ### Miss Program
-If a ray doesn't intersect with any geometries, it will invoke the `miss program`. You can find it in `PinholeCamera.cu`:
+If a ray doesn't intersect with any geometries, it will invoke the `miss program`. You can find it in `Common.cu`:
 
 ```cpp
-// PinholeCamera.cu
+// Common.cu
 // Device
 
 RT_PROGRAM void miss() {
@@ -240,12 +233,12 @@ RT_PROGRAM void miss() {
 
 Since we haven't insert any geometries to the OptiX graph yet, you can expect this program getting called for every pixel. That's why the image we produce now is all red:
 ```cpp
-// PinholeCamera.cu
+// Common.cu
 // Device
 
-payload.result = make_float3(1, 0, 0);
+payload.radiance = make_float3(1, 0, 0);
 ```
-Here, we set the result of the current payload to be red. You can set it to another color or even use a skybox for the background.
+Here, we set the result of the current payload to be red. You can set it to another color.
 > **Task 2**:
 > 1. Before the declaration of `miss()`, we declare a variable call `backgroundColor`. Set the result of the payload to `backgroundColor`. Compile and run the application again and you should see a black image is produced instead.
 
@@ -295,18 +288,18 @@ if (rtPotentialIntersection(t)) {
 `rtPotentialIntersection()` will return true if `t` is in the range of `minT` and `maxT` of the current ray. If `t` is valid, then we will call `rtReportIntersection()`, which takes a material index indicating which material we are using. Since we only use one material in this assignment, we will pass a `0` as the index.
 
 > **Task 3**:
-> 1. In `OptixAPP::buildScene()`, read the following values from the scene file: tri and vertex. You should add fields to the declaration of `Triangle` so that you can create a `Triangle` to store the information read from "tri". There is a vector of `Triangle` called `triangles` in `buildScene()` and it will be used to create the triangle buffer. Remember to push the `Triangle` you create to `triangles`!
-> 2. Implement the triangle intersection program in `Triangle.cu`. If done correctly, you should produce the correct image running `scene1.test`. This is also a good time to check the correctness of the ray generation program.
+> 1. In `SceneLoader::load()`, read the following values from the scene file: tri and vertex. You should add fields to the declaration of `Triangle` so that you can create a `Triangle` to store the information read from "tri". There is a vector of `Triangle` called `triangles` in `buildScene()` and it will be used to create the triangle buffer. Remember to push the `Triangle` you create to `scene->triangles`!
+> 2. Implement the triangle intersection program in `Triangle.cu`. If done correctly, you should produce an image with correct shape running `scene1.test`. This is also a good time to check the correctness of the ray generation program.
 > 3. Repeat 1. and 2. for `Sphere`. If done correctly, you should produce an image that shows the correct geometries but in red running `scene2.test`.
 
 
 <br />
 
 ### Material Programs: Closest-hit Program
-Right now, the color of the geometries are all red and that's not interesting at all. The program where we do the shading is the `closest-hit program`. As its name suggests, it's invoked when a ray finds the closest intersection.
+Right now, the color of the geometries are all green and that's not interesting at all. The program where we do the shading is the `closest-hit program`. It's part of a material program. As its name suggests, it's invoked when a ray finds the closest intersection.
 
 ```cpp
-// BlinnPhong.cu
+// RayTracer.cu
 // Device
 
 RT_PROGRAM void closestHit() {
@@ -314,13 +307,13 @@ RT_PROGRAM void closestHit() {
 }
 ```
 
-Currently, it simply sets the result of the payload to be red:
+Currently, it simply sets the result of the payload to be green:
 
 ```cpp
-// BlinnPhong.cu
+// RayTracer.cu
 // Device
 
-float3 result = make_float3(1, 0, 0);
+float3 result = make_float3(0, 1, 0);
 payload.result = result;
 ```
 
@@ -369,10 +362,21 @@ if (rtPotentialIntersection(t)) {
 ```
 This is very important: you must set them between the calls to make it work. Now, if the current intersection is the closest one, you can access this ambient value in `closestHit()`.
 
+In the starter code, you will find
+```cpp
+// Closest-Hit Program
+// Device
+
+rtDeclareVariable(Attributes, attrib, attribute attrib, );
+
+```
+where `Attributes` is a struct defined in `Geometries.h`. You can declare some attributes you want to transfer inside this struct so that you don't need to call `rtDeclareVariable` every time you add a new attribute.
+
+
 > **Task 4**:
-> 1. In `OptixAPP::buildScene()`, read the value "ambient" from the scene file. Expand the definitions of `Triangle` and `Sphere` to include ambient. Pass this value to the closest-hit program in `BlinnPhong.cu` as shown above and use it as the final color. If done correctly, you will produce the correct image for `scene2.test`.
+> 1. In `Renderer::buildScene()`, read the value "ambient" from the scene file. Expand the definitions of `Triangle` and `Sphere` to include ambient. Pass this value to the closest-hit program in `RayTracer.cu` as shown above and use it as the final color. If done correctly, you will produce the correct image for `scene1.test` and `scene2.test`.
 > 2. Read the following values for transformations: translate, scale, rotate, pushTransform and popTransform. Again, expand the definitions of `Triangle` and `Sphere` to encode their transformations. If done correctly, you will produce the correct image for `scene3.test`.
-> 3. Continue to expand the definitions by reading diffuse, specular, emission and shininess. Don't forget to pass them via attribute variables as well. It's highly recommended to create a struct that contains all the variables you want to pass and use an attribute variable to transfer the struct.
+> 3. Continue to expand the definitions by reading diffuse, specular, emission and shininess. It's highly recommended to use the `Attributes` struct to do so.
 
 <br />
 
@@ -383,7 +387,7 @@ Using only ambient color for shading is boring as well. We would like to add lig
 // PinholeCamera.cu
 // Device
 
-Ray ray = make_Ray(eye, dir, BASIC_RAY, RAY_EPSILON, RT_DEFAULT_MAX);
+Ray ray = make_Ray(origin, dir, 0, epsilon, RT_DEFAULT_MAX);
 Payload payload;
 ...
 rtTrace(root, ray, payload);
@@ -393,31 +397,39 @@ The third parameter is the ray type, We define 0 to be basic ray and 1 to be sha
 ```cpp
 // Device
 
-Ray shadowRay = make_Ray(origin, dir, SHADOW_RAY, RAY_EPSILON, distanceToLight);
+Ray shadowRay = make_Ray(origin, dir, 1, epsilon, distanceToLight);
 ShadowPayload shadowPayload;
 ...
 rtTrace(root, shadowRay, shadowPayload);
 ```
 
-We use a different `payload` here that is specifically for shadow rays. These ray types are defined in the starter code. We can assign a `closest-hit program`, an `any-hit program`, or both to each ray type. When a ray of specific ray type is traced, it will call the the programs assigned to it. In `BlinnPhong.cu`, `closestHit()` is the `closest-hit program` for ray type 0 and `anyHit()` is the `any-hit program` for ray type 1. Don't worry if you don't understand this part. All you need to remember is if you create a ray of ray type 0, it will call `closestHit()` when it finds the closest intersection; if you create a ray of ray type 1, it will call `anyHit()` for every intersection.
+We use a different `payload` here that is specifically for shadow rays. We can assign a `closest-hit program`, an `any-hit program`, or both to each ray type. When a ray of specific ray type is traced, it will call the the programs assigned to it. In `RayTracer.cu`, `closestHit()` is the `closest-hit program` for ray type 0 and `anyHit()` (in `Common.cu`) is the `any-hit program` for ray type 1. Don't worry if you don't understand this part. All you need to remember is if you create a ray of ray type 0, it will call `closestHit()` when it finds the closest intersection; if you create a ray of ray type 1, it will call `anyHit()` for every intersection.
 
 `Any-hit program` is very simple. In our case, we only want to determine whether the object is in shadow and entering `anyHit()` means there is an intersection, so we can use a variable in the shadow payload to indicate it is in shadow. After that, we call `rtTerminateRay()` to stop tracing the shadow ray.
 
 > **Task 5**:
-> 1. Complete the definition of `ShadowPayload` in `Payload.h` and `anyHit()` in `BlinnPhong.cu`. This part should only take a few lines.
-> 2. Read the following values: point, directional and attenuation. Complete the definitions of `PointLight` and `DirectionalLight` in `Lights.h` to store useful information about these lights. Create these structs while reading the values and push them into `plights` and `dlights`, respectively. `plights` and `dlights` are vectors of `PointLight` and `DirectionalLight`. They will be used to create the buffers in `BlinnPhong.cu`.
-> 3. Implement direct illumination in `closestHit()` using the Blinn-Phong shading model with attributes we show above. Add variables or buffers if you need to. For example, you might want to have the intersection location as an attribute variable. Use `scene4-ambient.test`, `scene4-diffuse.test` and `scene4-emission.test` to test correctness.
+> 1. Read the following values: point, directional and attenuation. Complete the definitions of `PointLight` and `DirectionalLight` in `Lights.h` to store useful information about these lights. Create these structs while reading the values and push them into `scene->plights` and `scene->dlights`, respectively. `plights` and `dlights` are vectors of `PointLight` and `DirectionalLight`. They will be used to create the buffers in `RayTracer.cu`.
+> 2. Implement direct illumination in `closestHit()` using the Blinn-Phong shading model with attributes we show above. Add variables or buffers if you need to. For example, you might want to have the intersection location as an attribute variable. Use `scene4-ambient.test`, `scene4-diffuse.test` and `scene4-emission.test` to test correctness.
 
-We would like to have reflections as well. We don't need a new ray type for reflection ray. Just use 0:
+We would like to have reflections as well. Normally, we compute reflection using recursion. In our case, that means calling `rtTrace` inside  `closestHit()`. Although it works, we don't want to do that because recursion is very expensive on the GPU and it is limited by the amount of memory. Thus, we need to do it iteratively. For example, you can add some varaibles in your payload to tell `ray generation program` where to shoot the next ray:
 
 ```cpp
-// Closest-Hit Program
+// Ray Genereation Program
 // Device
 
-Ray reflectionRay = make_Ray(origin, dir, BASIC_RAY, RAY_EPSILON, RT_DEFAULT_MAX);
-Payload reflectionPayload;
-reflectionPayload.depth = currentDepth - 1;
-rtTrace(root, reflectionRay, reflectionPayload);
+do
+{
+  // Trace a ray
+  Ray ray = make_Ray(origin, dir, 0, epsilon, RT_DEFAULT_MAX);
+  rtTrace(root, ray, payload);
+
+  // Accumulate radiance
+  result += payload.radiance;
+
+  // Prepare to shoot next ray
+  origin = payload.origin;
+  dir = payload.dir;
+} while (!payload.done && payload.depth > 0);
 ```
 
 Remember that since this ray is of ray type 0, it will invoke `closestHit()`, essentially making it a recursion function. Thus, we need to set the depth variable in `Payload` to avoid stack overflow.
@@ -440,21 +452,18 @@ RT_PROGRAM void bound(int primIndex, float result[6]) {
 
 The `primIndex` is the same as the one in `intersect()`. `result` is an array of `float` that you will fill it. The first three elements of `result` is the smallest vertex of the bounding box and the other three elements is the largest vertex of the bounding box. For instance, if `result = {0, 0, 0, 1, 1, 1}`, it will define a bounding box whose smallest vertex is `(0, 0, 0)`, largest vertex is `(1, 1, 1)` and the other vertices are `(1, 0, 0)`, `(0, 1, 0)`, `(0, 0, 1)`, `(1, 1, 0)`, `(1, 0, 1)` and `(0, 1, 1)`.
 
-Once you have defined the bouding programs for triangles and spheres, enable accelerate structure in `OptixApp::buildScene`:
+Once you have defined the bouding programs for triangles and spheres, enable accelerate structure in `Renderer::buildScene`:
 
 ```cpp
-// OptixApp.cpp
+// Renderer.cpp
 // Host
 
 // Change these lines
-GG->setAcceleration(context->createAcceleration("NoAccel"));
-...
-root->setAcceleration(context->createAcceleration("NoAccel"));
+...->setAcceleration(context->createAcceleration("NoAccel"));
 
 // To these lines
-GG->setAcceleration(context->createAcceleration("Trbvh"));
-...
-root->setAcceleration(context->createAcceleration("Trbvh"));
+...->setAcceleration(context->createAcceleration("Trbvh"));
+
 ```
 We didn't have any acceleration structure and now we will be using `Trbvh`, a very fast GPU-based BVH build. You can read more [here](https://raytracing-docs.nvidia.com/optix_6_0/guide_6_0/index.html#host#acceleration-structure-builders).
 
@@ -464,7 +473,6 @@ We didn't have any acceleration structure and now we will be using `Trbvh`, a ve
 Awesome! Now you have a working GPU ray tracer. You can make it more powerful by adding more features from OptiX but it's not required. 
 
 ## Advanced Features 
-We are only covering the basic features of OptiX in this tutorials. To get the full picture of OptiX's capabilities, read the [programming guide](https://raytracing-docs.nvidia.com/optix_6_0/guide_6_0/index.html#guide#). Here are some advanced features that you might be interested in:
-* [Built-in support for triangles](https://raytracing-docs.nvidia.com/optix_6_0/guide_6_0/index.html#host#triangles): OptiX has built-in support for triangles, which allows faster triangle intersection tests. It doesn't require an intersection program or a bounding program so it's indeed easier than what we do in the assignment. If you happen to have a RTX card, you should definitely try this feature out because it utilizes the RT cores inside your RTX card and makes it even faster. 
-* [Progressive launches](https://raytracing-docs.nvidia.com/optix_6_0/guide_6_0/index.html#host#progressive-launches): When we do path tracing, it is pretty common that we need to use a lot of samples to generate a noise-free image and it often takes a long time. To better visualize the process, we can use progressive launches. It progressively adds new samples to the result buffer so that you can watch an image go from noisy to smooth.
-* Interoperability with [OpenGL](https://raytracing-docs.nvidia.com/optix_6_0/guide_6_0/index.html#opengl#interoperability-with-opengl) and [CUDA](https://raytracing-docs.nvidia.com/optix_6_0/guide_6_0/index.html#cuda#interoperability-with-cuda): Since OptiX, OpenGL and CUDA store data on the GPU, they can share the data within the GPU without transferring it first to the CPU, which greatly increases the performance if you are planning to use them together. 
+We are only covering the basic features of OptiX in this tutorials. To get the full picture of OptiX's capabilities, read the [programming guide](https://raytracing-docs.nvidia.com/optix6/guide_6_5/index.html#guide#). Here are some advanced features that you might be interested in:
+* [Built-in support for triangles](https://raytracing-docs.nvidia.com/optix6/guide_6_5/index.html#host#triangles): OptiX has built-in support for triangles, which allows faster triangle intersection tests. It doesn't require an intersection program or a bounding program so it's indeed easier than what we do in the assignment. If you happen to have a RTX card, you should definitely try this feature out because it utilizes the RT cores inside your RTX card and makes it even faster. 
+* Interoperability with [OpenGL](https://raytracing-docs.nvidia.com/optix6/guide_6_5/index.html#opengl#interoperability-with-opengl) and [CUDA](https://raytracing-docs.nvidia.com/optix6/guide_6_5/index.html#cuda#interoperability-with-cuda): Since OptiX, OpenGL and CUDA store data on the GPU, they can share the data within the GPU without transferring it first to the CPU, which greatly increases the performance if you are planning to use them together. 
