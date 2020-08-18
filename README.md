@@ -1,5 +1,5 @@
 # Tutorial
-This tutorial will cover the basics of using OptiX for the first assignment. Complete all the tasks as you are reading and you will get a GPU ray tracer, which you will expand to a path tracer in the future assignments. However, this is **NOT** a tutorial about ray tracing. You should refer to course materials for that part. The starter code is thoroughly documented and you can find answers to a lot of questions by reading it. There are a lot of `TODO` comments in the starter code. Make sure you don't miss any of them.
+This tutorial will cover the basics of using OptiX for the first assignment. Complete all the tasks as you are reading and you will get a GPU ray tracer, which you will expand to a path tracer in the future assignments. However, this is **NOT** a tutorial about ray tracing. You should refer to course materials for that part. The starter code is thoroughly documented and you can find answers to a lot of questions by reading it. There are a lot of `TODO` comments in the starter code. Make sure you don't miss any of them. There is a FAQ.txt file in the starter code, which covers some frequently asked questions regarding the start code and some useful tips for future assignments. Make sure to check it out!
 
 ## Table of contents
 - [Tutorial](#tutorial)
