@@ -21,8 +21,7 @@ This tutorial will cover the basics of using OptiX for the first assignment. Com
    an RTX card. If you don't know the version of the driver, just upgrade it 
    to the newest version. 
 
-*  [CUDA Toolkit 5.0+](https://developer.nvidia.com/cuda-downloads). Install the 
-   latest version if you don't have CUDA yet.
+*  [CUDA Toolkit 10.1](https://developer.nvidia.com/cuda-10.1-download-archive-base). Install CUDA 10.1. Newer and older versions might have problem with Optix 6.5.
 
 *  [CMake 3.0 minimum](http://www.cmake.org/cmake/resources/software.html).
 
