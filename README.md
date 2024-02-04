@@ -38,7 +38,7 @@ The starter code support Windows and Linux. You can find the platform-specific b
 ## About OptiX
 The OptiX API was developed by Nvidia to accelerate ray tracing applications using GPUs. It utilizes another API created by Nvidia called CUDA, which allows developers to conduct general purpose processing on GPUs. A CUDA program consists of `host` and `device` code: `host` code runs on the CPU and `device` code runs on the GPU. For this project, all `host` code belongs in `.cpp` files and all `device` code belongs in `.cu` files. OptiX provides an abstracted pipeline for ray tracing algorithms, which allows developers to define their own "programs" in `device` code to fit into the pipeline. They are analogous to shaders in OpenGL.
 
-For reference, the [programming guide](https://raytracing-docs.nvidia.com/optix6/guide_6_5/index.html#guide#) and the [API documentation](https://raytracing-docs.nvidia.com/optix6/api_6_5/html/index.html) will be very helpful. Do be aware that the programming guide uses the OptiX C API most of the time but for the assignment, while we will use OptiXpp, a thin C++ wrapper for the C API.
+For reference, the [programming guide](OptiX_Programming_Guide_6.5.0.pdf) and the [API documentation](OptiX_API_Reference_6.5.0.pdf) will be very helpful. Do be aware that the programming guide uses the OptiX C API most of the time but for the assignment, while we will use OptiXpp, a thin C++ wrapper for the C API.
 
 ## OptiX Programs
 OptiX programs are the building blocks in an OptiX application. There are several types of programs that each perform a specific job in the render pipeline. See the flowchart below for an overview of the basic OptiX programs.
@@ -122,9 +122,9 @@ program["myVar"]->setFloat(f1, f2, f3); // f1, f2, f3 are float
 // Or
 program["myVar"]->setFloat(f); // f is float3
 ```
-You can read more [here](https://raytracing-docs.nvidia.com/optix6/api_6_5/html/classoptix_1_1_variable_obj.html).
+You can read more in [API Reference 7.53](OptiX_API_Reference_6.5.0.pdf#subsection.7.53).
 
-You might wonder what is `float3`. It's a type defined by OptiX to represent a 3D vector of `float`. Similarly, there are `float2`, `float1`, `int3`, etc. You can access its components by, for instance, `var.x`, `var.y` and `var.z`. It's highly recommended to read [this](https://raytracing-docs.nvidia.com/optix6/api_6_5/html/optixu__math__namespace_8h.html) to learn more about the vector types and their operations. Read [this](https://raytracing-docs.nvidia.com/optix6/api_6_5/html/optixu__matrix__namespace_8h.html) if you need to use the matrix types.
+You might wonder what is `float3`. It's a type defined by OptiX to represent a 3D vector of `float`. Similarly, there are `float2`, `float1`, `int3`, etc. You can access its components by, for instance, `var.x`, `var.y` and `var.z`. It's highly recommended to read [API Reference 8.32](OptiX_API_Reference_6.5.0.pdf#subsection.8.32) to learn more about the vector types and their operations. Read [API Reference 8.36](OptiX_API_Reference_6.5.0.pdf#subsection.8.36) if you need to use the matrix types.
 
 ### Ray Generation Program
 The entry point of all programs is a `ray generation program`. It is responsible for generating rays, shooting them and recording the results. In the starter code, you can find it in `PinholeCamera.cu`:
@@ -198,9 +198,9 @@ rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, ); // a 2d index (x, y)
 // Write the result
 resultBuffer[launchIndex] = payload.radiance;
 ```
-Notice that when we declare `launchIndex`, we fill in the third argument. This argument is for "semantic". OpitX provides some internal semantics that allows you to access some important variables it creates. For instance, `rtLaunchIndex` will give users the current launch index signifying which pixel we are working on. You can read about other internal semantics and in which programs you can access them [here](https://raytracing-docs.nvidia.com/optix6/guide_6_5/index.html#programs#internally-provided-semantics).
+Notice that when we declare `launchIndex`, we fill in the third argument. This argument is for "semantic". OpitX provides some internal semantics that allows you to access some important variables it creates. For instance, `rtLaunchIndex` will give users the current launch index signifying which pixel we are working on. You can read about other internal semantics and in which programs you can access them in [Programming Guide 4.1.3](OptiX_Programming_Guide_6.5.0.pdf#[{"num"%3A87%2C"gen"%3A0}%2C{"name"%3A"XYZ"}%2C72%2C506.027%2Cnull]).
 
-`root` is a `rtObject` and it is the root of the OptiX graph we are going to traverse. You can think of an OptiX graph as a scene graph that contains all the geometries, although it has more going on. You can read about it [here](https://raytracing-docs.nvidia.com/optix6/guide_6_5/index.html#host#graph-nodes) but the starter codes do it for you already.
+`root` is a `rtObject` and it is the root of the OptiX graph we are going to traverse. You can think of an OptiX graph as a scene graph that contains all the geometries, although it has more going on. You can read about it in [Programming Guide 3.4](file:///C:/Users/wesle/Downloads/OptiX_Programming_Guide_6.5.0.pdf#%5B%7B%22num%22%3A36%2C%22gen%22%3A0%7D%2C%7B%22name%22%3A%22XYZ%22%7D%2C72%2C415.551%2Cnull%5D) but the starter codes do it for you already.
 
 Now we are ready to trace the ray.
 ```cpp
@@ -464,7 +464,7 @@ Once you have defined the bouding programs for triangles and spheres, enable acc
 ...->setAcceleration(context->createAcceleration("Trbvh"));
 
 ```
-We didn't have any acceleration structure and now we will be using `Trbvh`, a very fast GPU-based BVH build. You can read more [here](https://raytracing-docs.nvidia.com/optix_6_0/guide_6_0/index.html#host#acceleration-structure-builders).
+We didn't have any acceleration structure and now we will be using `Trbvh`, a very fast GPU-based BVH build. You can read more in [Programming Guide 3.5.2](OptiX_Programming_Guide_6.5.0.pdf#[{"num"%3A228%2C"gen"%3A0}%2C{"name"%3A"XYZ"}%2C72%2C711.673%2Cnull]).
 
 > **Task 7**:
 > 1. Complete `bound()` in `Triangle.cu` and `Sphere.cu`. Enable acceleration structure as shown above. Test it on previous scene files to make sure the images produced are still correct, then test it on `scene7.test` and see how much the performance improves.
@@ -472,6 +472,6 @@ We didn't have any acceleration structure and now we will be using `Trbvh`, a ve
 Awesome! Now you have a working GPU ray tracer. You can make it more powerful by adding more features from OptiX but it's not required. 
 
 ## Advanced Features 
-We are only covering the basic features of OptiX in this tutorials. To get the full picture of OptiX's capabilities, read the [programming guide](https://raytracing-docs.nvidia.com/optix6/guide_6_5/index.html#guide#). Here are some advanced features that you might be interested in:
-* [Built-in support for triangles](https://raytracing-docs.nvidia.com/optix6/guide_6_5/index.html#host#triangles): OptiX has built-in support for triangles, which allows faster triangle intersection tests. It doesn't require an intersection program or a bounding program so it's indeed easier than what we do in the assignment. If you happen to have a RTX card, you should definitely try this feature out because it utilizes the RT cores inside your RTX card and makes it even faster. 
-* Interoperability with [OpenGL](https://raytracing-docs.nvidia.com/optix6/guide_6_5/index.html#opengl#interoperability-with-opengl) and [CUDA](https://raytracing-docs.nvidia.com/optix6/guide_6_5/index.html#cuda#interoperability-with-cuda): Since OptiX, OpenGL and CUDA store data on the GPU, they can share the data within the GPU without transferring it first to the CPU, which greatly increases the performance if you are planning to use them together. 
+We are only covering the basic features of OptiX in this tutorials. To get the full picture of OptiX's capabilities, read the [programming guide](OptiX_Programming_Guide_6.5.0.pdf). Here are some advanced features that you might be interested in:
+* [Built-in support for triangles (Section 3.6)](OptiX_Programming_Guide_6.5.0.pdf#%5B%7B%22num%22%3A61%2C%22gen%22%3A0%7D%2C%7B%22name%22%3A%22XYZ%22%7D%2C72%2C206.454%2Cnull%5D): OptiX has built-in support for triangles, which allows faster triangle intersection tests. It doesn't require an intersection program or a bounding program so it's indeed easier than what we do in the assignment. If you happen to have a RTX card, you should definitely try this feature out because it utilizes the RT cores inside your RTX card and makes it even faster. 
+* Interoperability with [OpenGL (Section 8)](OptiX_Programming_Guide_6.5.0.pdf#%5B%7B%22num%22%3A223%2C%22gen%22%3A0%7D%2C%7B%22name%22%3A%22XYZ%22%7D%2C72%2C711.673%2Cnull%5D) and [CUDA (Section 9)](OptiX_Programming_Guide_6.5.0.pdf#%5B%7B%22num%22%3A228%2C%22gen%22%3A0%7D%2C%7B%22name%22%3A%22XYZ%22%7D%2C72%2C711.673%2Cnull%5D): Since OptiX, OpenGL and CUDA store data on the GPU, they can share the data within the GPU without transferring it first to the CPU, which greatly increases the performance if you are planning to use them together. 
